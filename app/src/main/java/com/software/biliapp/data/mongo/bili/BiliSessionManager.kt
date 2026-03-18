@@ -36,6 +36,10 @@ class BiliSessionManager(
         context.dataStore.edit { it.clear() }
     }
 
+    val jctFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[BILI_JCT] ?: ""
+    }
+
     val cookieFlow: Flow<String> = context.dataStore.data.map { preferences ->
         val sd = preferences[SESSDATA] ?: ""
         val bjct = preferences[BILI_JCT] ?: ""

@@ -403,7 +403,14 @@ fun BiliProfileAvatar(
             verticalArrangement = Arrangement.Center
         ) {
             Text(text = uiState.userInfo?.uname ?: "", fontSize = 16.sp)
-            Text(text = "B币：获取暂无 硬币：获取暂无", fontSize = 12.sp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Text(text = "B币：${uiState.userInfo?.money ?: 0.0}", fontSize = 12.sp)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(text = "节操值：${uiState.userInfo?.moral ?: 0.0}", fontSize = 12.sp)
+            }
         }
         Spacer(modifier = Modifier.weight(1f))
         IconButton(

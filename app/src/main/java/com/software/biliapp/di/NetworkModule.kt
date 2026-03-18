@@ -43,19 +43,24 @@ object NetworkModule {
         val loggingIntercepter = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
-        val cookie = runBlocking {
-            biliSessionManager.cookieFlow.first()
-        }
         return OkHttpClient.Builder()
             .addInterceptor(loggingIntercepter)
             .addInterceptor { chain ->
+                val currentCookie = runBlocking {
+                    biliSessionManager.cookieFlow.first()
+                }
                 val request = chain.request().newBuilder()
                     .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                     // 建议 Referer 加上结尾斜杠
                     .header("Referer", "https://www.bilibili.com/")
+                    .header("Origin", "https://www.bilibili.com")
                     // 明确告诉服务器你接受 JSON
                     .header("Accept", "application/json, text/plain, */*")
-                    .header("Cookie", cookie)
+                    .apply {
+                        if (currentCookie.isNotEmpty()) {
+                            header("Cookie", currentCookie)
+                        }
+                    }
                     .build()
                 chain.proceed(request)
             }

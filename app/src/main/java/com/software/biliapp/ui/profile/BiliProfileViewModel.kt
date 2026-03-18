@@ -36,7 +36,7 @@ class BiliProfileViewModel @Inject constructor(
             val actualCookie = biliSessionManager.cookieFlow.first()
 
             Log.d("BiliProfileViewModel", "真实的 Cookie: $actualCookie")
-
+            Log.d("BiliProfileViewModel", "jct: ${biliSessionManager.jctFlow.first()}")
             if (actualCookie.isEmpty()) {
                 Log.e("BiliProfileViewModel", "Cookie 为空，用户可能未登录")
                 return@launch

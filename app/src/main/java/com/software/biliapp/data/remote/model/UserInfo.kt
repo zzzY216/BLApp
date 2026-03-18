@@ -7,13 +7,17 @@ import kotlinx.serialization.Serializable
 data class UserInfo(
     val isLogin: Boolean,
     val face: String,
-    val uname: String
+    val uname: String,
+    val money: Int,
+    val moral: Int
 )
 
 fun UserInfo.toDomain(): UserInfoDomain {
     return UserInfoDomain(
         isLogin = isLogin,
         face = face,
-        uname = uname
+        uname = uname,
+        money = money,
+        moral = moral
     )
 }

@@ -41,6 +41,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.software.biliapp.domain.model.RecommendItemDomain
+import com.software.biliapp.ui.components.cards.BiliVideoUiCard
 
 @Composable
 fun BiliRecommendUiScreen(
@@ -83,89 +84,23 @@ fun BiliHomeUiVideoList(
         ) { index ->
             val video = pagingItems[index] ?: return@items
             Log.d("BiliHomeUiScreen", "video: $video")
-            BiliHomeUiVideoItem(video = video, onNavigateToDetail = onNavigateToDetail)
-        }
-    }
-}
-
-@Composable
-fun BiliHomeUiVideoItem(
-    video: RecommendItemDomain,
-    onNavigateToDetail: (String, String, Int, String, String) -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.clickable {
-                onNavigateToDetail(
-                    video.playerArgs?.aid.toString(),
-                    video.playerArgs?.cid.toString(),
-                    64, "mp4", "html5"
-                )
-            }
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16 / 10f)
-            ) {
-                Log.d("BiliHomeUiScreen", "cover: ${video.cover}")
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(video.cover) // 图片 URL
-                        .setHeader("Referer", "https://www.bilibili.com") // 必须加这个
-                        .crossfade(true)
-                        .listener(
-                            onStart = { Log.d("Coil", "开始加载: ${video.cover}") },
-                            onError = { _, result ->
-                                Log.e("Coil", "加载失败: ${result.throwable.message}")
-                            },
-                            onSuccess = { _, _ -> Log.d("Coil", "加载成功") }
-                        )
-                        .build(),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color.Transparent,
-                                    Color.Black.copy(0.6f)
-                                )
-                            )
-                        )
-                        .padding(4.dp)
-                ) {
-                    Text(
-                        text = video.coverLeft1ContentDescription ?: "",
-                        color = Color.White,
-                        fontSize = 10.sp
+            BiliVideoUiCard(
+                modifier = Modifier,
+                imageUrl = video.cover,
+                title = video.title,
+                label1 = video.coverLeft1ContentDescription,
+                label2 = video.coverLeft2ContentDescription,
+                imageHeaders = mapOf("Referer" to "https://www.bilibili.com"),
+                onClick = {
+                    // 在这里处理具体的业务逻辑
+                    onNavigateToDetail(
+                        video.playerArgs?.aid.toString(),
+                        video.playerArgs?.cid.toString(),
+                        64, "mp4", "html5"
                     )
-                    Text(
-                        text = video.coverLeft2ContentDescription ?: "",
-                        color = Color.White,
-                        fontSize = 10.sp
-                    )
-                }
-            }
-            Column(
-                modifier = Modifier.padding(8.dp)
-            ) {
-                Text(
-                    text = video.title,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-            }
+                },
+                aspectRatio = 16 / 10f
+            )
         }
     }
 }

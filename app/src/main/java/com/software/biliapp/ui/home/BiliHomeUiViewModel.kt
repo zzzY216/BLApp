@@ -7,6 +7,7 @@ import androidx.paging.cachedIn
 import com.software.biliapp.data.mongo.bili.BiliSessionManager
 import com.software.biliapp.domain.usecase.BiliGetPopularListUseCase
 import com.software.biliapp.domain.usecase.BiliGetUserInfoUseCase
+import com.software.biliapp.domain.usecase.GetRecommendVideosUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,12 +20,14 @@ import javax.inject.Inject
 class BiliHomeUiViewModel @Inject constructor(
     private val biliGetUserInfoUseCase: BiliGetUserInfoUseCase,
     private val biliSessionManager: BiliSessionManager,
-    private val biliGetPopularListUseCase: BiliGetPopularListUseCase
+    private val biliGetPopularListUseCase: BiliGetPopularListUseCase,
+    private val getRecommendVideosUseCase: GetRecommendVideosUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(BiliHomeUiState())
     val uiState = _uiState.asStateFlow()
 
     val popularListPagingFlow = biliGetPopularListUseCase.invoke().cachedIn(viewModelScope)
+    val recommendListPagingFlow = getRecommendVideosUseCase.invoke().cachedIn(viewModelScope)
 
     init {
         getUserInfo()

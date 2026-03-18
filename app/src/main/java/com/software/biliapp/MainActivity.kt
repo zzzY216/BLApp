@@ -110,7 +110,11 @@ fun BiliAppContainer() {
                 )
             }
             composable<RouteBiliHome> {
-                BiliHomeUiScreen()
+                BiliHomeUiScreen(
+                    onNavigateToDetail = { avid, cid, qn, type, platform ->
+                        biliNavController.navigate(RouteBiliDetail(avid, cid, qn, type, platform))
+                    }
+                )
             }
         }
         if (showBiliBottomBar) {

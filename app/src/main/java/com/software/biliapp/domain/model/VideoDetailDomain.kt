@@ -1,6 +1,7 @@
 package com.software.biliapp.domain.model
 
 data class VideoDetailDomain(
+    val bvid: String,
     val owner: VideoOwnerDomain,
     val stat: VideoStatDomain
 )

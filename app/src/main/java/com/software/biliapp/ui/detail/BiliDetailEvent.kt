@@ -16,6 +16,7 @@ sealed class BiliDetailEvent {
         val pn: Int,
         val ps: Int
     ) : BiliDetailEvent()
+    object LikeVideo : BiliDetailEvent()
 }
 
 sealed class BiliDetailUiEffect {

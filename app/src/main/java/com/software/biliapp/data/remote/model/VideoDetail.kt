@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class VideoDetail(
+    val bvid: String,
     val owner: VideoOwner,
     val stat: VideoStat
 )
@@ -31,6 +32,7 @@ data class VideoOwner(
 
 fun VideoDetail.toDomain(): VideoDetailDomain {
     return VideoDetailDomain(
+        bvid = bvid,
         owner = owner.toDomain(),
         stat = stat.toDomain()
     )

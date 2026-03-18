@@ -1,5 +1,6 @@
 package com.software.biliapp.di
 
+import com.software.biliapp.data.mongo.bili.BiliSessionManager
 import com.software.biliapp.data.remote.network.BiliApiService
 import com.software.biliapp.data.remote.network.BiliLoginApiService
 import com.software.biliapp.data.repository.BiliGetPopularListRepository
@@ -12,6 +13,10 @@ import com.software.biliapp.data.repository.BiliGetVideoDetailRepository
 import com.software.biliapp.data.repository.BiliGetVideoDetailRepositoryImpl
 import com.software.biliapp.data.repository.BiliGetVideoPlayUrlRepository
 import com.software.biliapp.data.repository.BiliGetVideoPlayUrlRepositoryImpl
+import com.software.biliapp.data.repository.BiliHasLikeVideoRepository
+import com.software.biliapp.data.repository.BiliHasLikeVideoRepositoryImpl
+import com.software.biliapp.data.repository.BiliLikeVideoRepository
+import com.software.biliapp.data.repository.BiliLikeVideoRepositoryImpl
 import com.software.biliapp.data.repository.BiliRecommendVideoRepository
 import com.software.biliapp.data.repository.BiliRecommendVideoRepositoryImpl
 import com.software.biliapp.data.repository.BlBlPollQrCodeStatusRepository
@@ -27,6 +32,23 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object BiliRepositoryModule {
+    @Provides
+    @Singleton
+    fun provideBiliHasLikeVideoRepository(
+        @BiliApiNetwork apiService: BiliApiService
+    ): BiliHasLikeVideoRepository {
+        return BiliHasLikeVideoRepositoryImpl(apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBiliLikeVideoRepository(
+        @BiliApiNetwork apiService: BiliApiService,
+        biliSessionManager: BiliSessionManager
+    ): BiliLikeVideoRepository {
+        return BiliLikeVideoRepositoryImpl(apiService, biliSessionManager)
+    }
+
     @Provides
     @Singleton
     fun provideBiliGetVideoPlayUrlRepository(

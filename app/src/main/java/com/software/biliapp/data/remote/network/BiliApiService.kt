@@ -2,14 +2,19 @@ package com.software.biliapp.data.remote.network
 
 import com.software.biliapp.data.remote.model.BiliResponse
 import com.software.biliapp.data.remote.model.BiliVideoUrlResponse
+import com.software.biliapp.data.remote.model.HasLikeVideoData
+import com.software.biliapp.data.remote.model.LikeVideoData
 import com.software.biliapp.data.remote.model.PlayUrlData
 import com.software.biliapp.data.remote.model.PopularData
 import com.software.biliapp.data.remote.model.RecommendData
 import com.software.biliapp.data.remote.model.ReplyData
 import com.software.biliapp.data.remote.model.UserInfo
 import com.software.biliapp.data.remote.model.VideoDetail
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface BiliApiService {
@@ -75,4 +80,26 @@ interface BiliApiService {
         @Query("pn") pn: Int = 1,
         @Query("ps") ps: Int = 20
     ): BiliResponse<ReplyData>
+
+    // 点赞 Post
+    /// aid	num	稿件avid	必要（可选）	avid与bvid任选一个
+    /// bvid	str	稿件bvid	必要（可选）	avid与bvid任选一个
+    /// like	num	操作方式	必要	1：点赞 2：取消赞
+    // csrf	str	CSRF Token（位于cookie）	必要
+    @FormUrlEncoded
+    @POST("/x/web-interface/archive/like")
+    suspend fun likeVideo(
+        @Field("aid") aid: String? = null,
+        @Field("bvid") bvid: String? = null,
+        @Field("like") like: Int,
+        @Field("csrf") csrf: String,
+        @Header("Referer") referer: String,
+    ): LikeVideoData
+
+    @GET("/x/web-interface/archive/has/like")
+    suspend fun hasLikeVideo(
+        @Query("aid") aid: String? = null,
+        @Query("bvid") bvid: String? = null,
+//        @Query("access_key") access_key: String? = null
+    ): HasLikeVideoData
 }

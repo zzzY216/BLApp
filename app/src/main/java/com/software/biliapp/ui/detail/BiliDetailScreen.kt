@@ -4,10 +4,8 @@ import android.transition.CircularPropagation
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.annotation.OptIn
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -71,7 +69,6 @@ import coil.compose.AsyncImage
 import com.software.biliapp.R
 import com.software.biliapp.domain.model.BiliReplyDomain
 import com.software.biliapp.domain.model.VideoDetailDomain
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 
 @Composable
@@ -131,11 +128,9 @@ fun BiliDetailScreen(
                     onTabClick = {
                         selectedTab = it
                     },
-                    onClick = {
-                        viewModel.onEvent(BiliDetailEvent.GetVideoDetail(avid, cid))
-                    },
                     videoDetail = uiState.value.videoDetail,
-                    uiState = uiState.value
+                    uiState = uiState.value,
+                    onEvent = viewModel::onEvent
                 )
             }
         }
@@ -149,8 +144,8 @@ fun BiliDetailSuccessContent(
     player: ExoPlayer,
     selectedTab: Int = 0,
     onTabClick: (Int) -> Unit = {},
-    onClick: () -> Unit,
     videoDetail: VideoDetailDomain?,
+    onEvent: (BiliDetailEvent) -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -173,7 +168,7 @@ fun BiliDetailSuccessContent(
             }
             if (selectedTab == 0) {
                 item { BiliPlayerItem(videoDetail = videoDetail) }
-                item { BiliPlayerStat(videoDetail = videoDetail) }
+                item { BiliPlayerStat(uiState = uiState, onEvent = onEvent) }
             } else {
                 val replies = uiState.replyData?.replies
                 if (replies == null) {
@@ -200,29 +195,6 @@ fun BiliDetailSuccessContent(
         }
     }
 }
-
-@Composable
-fun BiliDetailSuccessItem(
-    uiState: BiliDetailState,
-    videoDetail: VideoDetailDomain?,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        BiliPlayerItem(videoDetail = videoDetail)
-        BiliPlayerStat(videoDetail = videoDetail)
-        BiliReplyItem(uiState.replyData?.replies?.get(0), content = {
-            BiliReplyChildItem(
-                uiState.replyData?.replies?.get(0)?.replies?.get(0)?.member?.uname ?: "获取失败",
-                uiState.replyData?.replies?.get(0)?.replies?.get(0)?.content?.message ?: "获取失败"
-            )
-        }, isUp = true)
-    }
-}
-
 
 @Composable
 fun BiliReplyItem(
@@ -311,7 +283,8 @@ fun BiliReplyChildItem(
 
 @Composable
 fun BiliPlayerStat(
-    videoDetail: VideoDetailDomain?,
+    uiState: BiliDetailState,
+    onEvent: (BiliDetailEvent) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -319,34 +292,40 @@ fun BiliPlayerStat(
             .fillMaxWidth()
     ) {
         BiliPlayerStatItem(
-            text = videoDetail?.stat?.like.toString(),
+            text = uiState.videoDetail?.stat?.like.toString(),
             R.drawable.ic_bili_like,
-            onClick = {},
-            modifier = Modifier.weight(1f)
+            isSelected = uiState.isLike,
+            modifier = Modifier.weight(1f),
+            onClick = {
+                onEvent(BiliDetailEvent.LikeVideo)
+            }
         )
         BiliPlayerStatItem(
-            text = videoDetail?.stat?.coin.toString(),
+            text = uiState.videoDetail?.stat?.coin.toString(),
             R.drawable.ic_bili_coin,
-            onClick = {},
-            modifier = Modifier.weight(1f)
+            isSelected = uiState.isCoin,
+            modifier = Modifier.weight(1f),
+            onClick = {}
         )
         BiliPlayerStatItem(
-            text = videoDetail?.stat?.favorite.toString(),
+            text = uiState.videoDetail?.stat?.favorite.toString(),
             R.drawable.ic_bili_favorite,
-            onClick = {},
-            modifier = Modifier.weight(1f)
+            isSelected = uiState.isFavorite,
+            modifier = Modifier.weight(1f),
+            onClick = {}
         )
         BiliPlayerStatItem(
             text = "版本受限",
             R.drawable.ic_bili_download,
-            onClick = {},
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            onClick = {}
         )
         BiliPlayerStatItem(
-            text = videoDetail?.stat?.share.toString(),
+            text = uiState.videoDetail?.stat?.share.toString(),
             R.drawable.ic_bili_share,
-            onClick = {},
-            modifier = Modifier.weight(1f)
+            isSelected = uiState.isShare,
+            modifier = Modifier.weight(1f),
+            onClick = {}
         )
     }
 }
@@ -355,6 +334,7 @@ fun BiliPlayerStat(
 fun BiliPlayerStatItem(
     text: String,
     icon: Int,
+    isSelected: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -366,10 +346,11 @@ fun BiliPlayerStatItem(
         IconButton(
             onClick = onClick,
         ) {
-            Image(
+            Icon(
                 painter = painterResource(id = icon),
                 contentDescription = null,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
+                tint = if (isSelected) Color(0xFFEB5B5B) else Color.Gray
             )
         }
         Text(text = text, fontSize = 8.sp)
@@ -614,7 +595,7 @@ fun BiliPlayer(
                             Toast.makeText(context, "倍速播放已关闭", Toast.LENGTH_SHORT).show()
                         },
 
-                    )
+                        )
                 }
 
         )

@@ -1,8 +1,12 @@
 package com.software.biliapp.ui.home
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,15 +18,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Surface
@@ -43,32 +47,43 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
+import com.software.biliapp.R
 import com.software.biliapp.domain.model.PopularItemDomain
+import com.software.biliapp.domain.model.RecommendItemDomain
+import com.software.biliapp.ui.components.cards.BiliVideoUiCard
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
 fun BiliHomeUiScreen(
-    viewModel: BiliHomeUiViewModel = hiltViewModel()
+    viewModel: BiliHomeUiViewModel = hiltViewModel(),
+    onNavigateToDetail: (String, String, Int, String, String) -> Unit
 ) {
     val uiState = viewModel.uiState.collectAsState()
     val popularListPagingFlow = viewModel.popularListPagingFlow.collectAsLazyPagingItems()
+    val recommendListPagingFlow = viewModel.recommendListPagingFlow.collectAsLazyPagingItems()
     BiliHomeUiContent(
         uiState = uiState.value,
-        popularListPagingFlow = popularListPagingFlow
+        popularListPagingFlow = popularListPagingFlow,
+        recommendListPagingFlow = recommendListPagingFlow,
+        onNavigateToDetail = onNavigateToDetail
     )
 }
 
 @Composable
 fun BiliHomeUiContent(
     uiState: BiliHomeUiState,
-    popularListPagingFlow: LazyPagingItems<PopularItemDomain>
+    popularListPagingFlow: LazyPagingItems<PopularItemDomain>,
+    recommendListPagingFlow: LazyPagingItems<RecommendItemDomain>,
+    onNavigateToDetail: (String, String, Int, String, String) -> Unit
 ) {
     val tabs = listOf("直播", "推荐", "热门", "动画", "影视", "运动", "科技", "美食")
     val pagerState = rememberPagerState(initialPage = 1) { tabs.size }
@@ -119,11 +134,18 @@ fun BiliHomeUiContent(
                 // 每个页面可以有完全不同的布局
                 when (pageIndex) {
                     1 -> {
-                        LazyColumn() {
-                            items(50) {
-                                Text(text = "Item $it")
-                            }
-                        }
+                        BiliHomeRecommendList(
+                            pagingItems = recommendListPagingFlow,
+                            onNavigateToDetail = onNavigateToDetail
+                        )
+                    }
+
+                    2 -> {
+                        BiliHomePopularList(
+                            popularListPagingFlow = popularListPagingFlow,
+                            onNavigateToDetail = onNavigateToDetail
+                        )
+                        Spacer(modifier = Modifier.size(0.dp))
                     }
 
                     else -> {
@@ -150,12 +172,91 @@ fun BiliHomeUiContent(
     }
 }
 
+@Composable
+fun BiliHomeRecommendList(
+    pagingItems: LazyPagingItems<RecommendItemDomain>,
+    onNavigateToDetail: (String, String, Int, String, String) -> Unit
+) {
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Fixed(2),
+        contentPadding = PaddingValues(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalItemSpacing = 8.dp
+    ) {
+        items(
+            count = pagingItems.itemCount
+        ) { index ->
+            val video = pagingItems[index] ?: return@items
+            Log.d("BiliHomeUiScreen", "video: $video")
+            BiliVideoUiCard(
+                modifier = Modifier,
+                imageUrl = video.cover,
+                title = video.title,
+                label1 = video.coverLeft1ContentDescription,
+                label2 = video.coverLeft2ContentDescription,
+                imageHeaders = mapOf("Referer" to "https://www.bilibili.com"),
+                onClick = {
+                    // 在这里处理具体的业务逻辑
+                    onNavigateToDetail(
+                        video.playerArgs?.aid.toString(),
+                        video.playerArgs?.cid.toString(),
+                        64, "mp4", "html5"
+                    )
+                },
+                aspectRatio = 16 / 10f
+            )
+        }
+    }
+}
 
 @Composable
 fun BiliHomePopularList(
-    popularPagingFlow: LazyPagingItems<PopularItemDomain>
+    popularListPagingFlow: LazyPagingItems<PopularItemDomain>,
+    onNavigateToDetail: (String, String, Int, String, String) -> Unit
 ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (popularListPagingFlow.loadState.refresh is LoadState.Loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center),
+                color = Color.Magenta // 给个明显的颜色确认它在动
+            )
+        } else if (popularListPagingFlow.loadState.refresh is LoadState.Error) {
+            Text(
+                text = "加载失败，点击重试",
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
 
+        LazyVerticalStaggeredGrid(
+            modifier = Modifier.fillMaxSize(),
+            columns = StaggeredGridCells.Fixed(2),
+            contentPadding = PaddingValues(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalItemSpacing = 8.dp
+        ) {
+            items(popularListPagingFlow.itemCount) { index ->
+                val video = popularListPagingFlow[index]
+                if (video != null) {
+                    BiliVideoUiCard(
+                        imageUrl = video.pic,
+                        title = video.title,
+                        label1 = "tname: ${video.tname}",
+                        label2 = "up: ${video.owner.name}",
+                        imageHeaders = mapOf("Referer" to "https://www.bilibili.com"),
+                        onClick = {
+                            onNavigateToDetail(
+                                video.aid.toString(),
+                                video.cid.toString(),
+                                64,
+                                "mp4",
+                                "html5"
+                            )
+                        }
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -196,7 +297,8 @@ fun BiliHomeTab(
         modifier = modifier
             .fillMaxWidth()
             .padding(start = 12.dp)
-            .height(52.dp),
+            .height(52.dp)
+            .background(Color.White),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
@@ -228,8 +330,16 @@ fun BiliHomeTab(
             }
         }
         Spacer(modifier = Modifier.width(8.dp))
-        Icon(imageVector = Icons.Default.Home, contentDescription = "Home")
+        Icon(
+            painter = painterResource(id = R.drawable.ic_bili_game),
+            contentDescription = "Game",
+            modifier = Modifier.size(24.dp)
+        )
         Spacer(modifier = Modifier.width(8.dp))
-        Icon(imageVector = Icons.Default.Mail, contentDescription = "Mail")
+        Icon(
+            painter = painterResource(id = R.drawable.ic_bili_email),
+            contentDescription = "Mail",
+            modifier = Modifier.size(24.dp)
+        )
     }
 }

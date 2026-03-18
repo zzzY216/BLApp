@@ -5,6 +5,8 @@ import com.software.biliapp.data.repository.BiliGetReplyListRepository
 import com.software.biliapp.data.repository.BiliGetUserInfoRepository
 import com.software.biliapp.data.repository.BiliGetVideoDetailRepository
 import com.software.biliapp.data.repository.BiliGetVideoPlayUrlRepository
+import com.software.biliapp.data.repository.BiliHasLikeVideoRepository
+import com.software.biliapp.data.repository.BiliLikeVideoRepository
 import com.software.biliapp.data.repository.BiliRecommendVideoRepository
 import com.software.biliapp.data.repository.BlBlPollQrCodeStatusRepository
 import com.software.biliapp.data.repository.BlBlQrCodeDataRepository
@@ -13,6 +15,8 @@ import com.software.biliapp.domain.usecase.BiliGetReplyListUseCase
 import com.software.biliapp.domain.usecase.BiliGetUserInfoUseCase
 import com.software.biliapp.domain.usecase.BiliGetVideoDetailUseCase
 import com.software.biliapp.domain.usecase.BiliGetVideoPlayUrlUseCase
+import com.software.biliapp.domain.usecase.BiliHasStatVideoUseCase
+import com.software.biliapp.domain.usecase.BiliLikeVideoUseCase
 import com.software.biliapp.domain.usecase.BiliPollQrCodeStatusUseCase
 import com.software.biliapp.domain.usecase.BiliQrCodeDataUseCase
 import com.software.biliapp.domain.usecase.BiliRecommendVideoUseCase
@@ -25,6 +29,20 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 object BiliUseCaseModule {
+    @Provides
+    fun provideBiliHasStatUseCase(
+        biliHasLikeVideoRepository: BiliHasLikeVideoRepository
+    ): BiliHasStatVideoUseCase {
+        return BiliHasStatVideoUseCase(biliHasLikeVideoRepository)
+    }
+
+    @Provides
+    fun provideBiliLikeVideoUseCase(
+        biliLikeVideoRepository: BiliLikeVideoRepository
+    ): BiliLikeVideoUseCase {
+        return BiliLikeVideoUseCase(biliLikeVideoRepository)
+    }
+
     @Provides
     fun provideBiliGetVideoPlayUrlUseCase(
         biliGetVideoPlayUrlRepository: BiliGetVideoPlayUrlRepository

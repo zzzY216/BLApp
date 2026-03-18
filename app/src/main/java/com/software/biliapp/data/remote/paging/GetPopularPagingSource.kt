@@ -1,5 +1,6 @@
 package com.software.biliapp.data.remote.paging
 
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.software.biliapp.data.remote.model.toDomain
@@ -37,6 +38,7 @@ class GetPopularPagingSource @Inject constructor(
                 nextKey = nextKey
             )
         } catch (e: Exception) {
+            Log.d("GetPopularPagingSource", "Error: ${e.message}")
             LoadResult.Error(e)
         }
     }
